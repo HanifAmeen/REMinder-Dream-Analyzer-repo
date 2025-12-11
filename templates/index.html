@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>AI Dream Journal </title>
+<style>
+    body { font-family: Arial, sans-serif; margin: 0px; }
+    input, textarea { width: 70%; padding: 8px; margin: 8px 0; display: block; }
+    button { padding: 8px 16px; margin-top: 10px; cursor: pointer; }
+    .dream { border: 1px solid #ccc; padding: 12px; margin: 10px 0; border-radius: 5px; position: relative; }
+    .dream button.delete { position: absolute; top: 10px; right: 10px; background: #f44336; color: white; border: none; padding: 4px 8px; cursor: pointer; border-radius: 3px; }
+    #message { color: green; font-weight: bold; margin-top: 10px; }
+    h1, h2 { margin-bottom: 10px; }
+    .symbols { background: #f9f9f9; padding: 10px; margin-top: 8px; border-radius: 5px; white-space: pre-wrap; }
+    .themes { font-style: italic; margin-bottom: 5px; }
+</style>
+</head>
+<body>
+<h1>AI Dream Journal</h1>
+
+<h2>Add a Dream</h2>
+<form id="dreamForm">
+    <input type="text" id="title" placeholder="Dream title" required>
+    <textarea id="content" placeholder="Write your dream..." required></textarea>
+    <input type="text" id="mood" placeholder="Mood (optional)">
+    <button type="submit">Save Dream</button>
+    <p id="message"></p>
+</form>
+
+<h2>Your Dreams</h2>
+<div id="dreams"></div>
+
+<script>
+async function fetchDreams() {
+    const res = await fetch('/get_dreams');
+    const data = await res.json();
+    const container = document.getElementById('dreams');
+    container.innerHTML = '';
+
+    data.forEach(dream => {
+        const div = document.createElement('div');
+        div.className = 'dream';
+
+        // Dream main content
+        const contentHTML = document.createElement('div');
+        contentHTML.innerHTML = `
+            <strong>${dream.title}</strong> (${dream.date})<br>
+            <strong>Mood:</strong> ${dream.mood || 'N/A'}<br>
+            ${dream.themes ? `<div class="themes"><strong>Themes:</strong> ${dream.themes}</div>` : ''}
+            <p>${dream.content}</p>
+        `;
+        div.appendChild(contentHTML);
+
+        // Symbols block (always show, even if empty)
+        const symbolsDiv = document.createElement('pre');
+        symbolsDiv.className = 'symbols';
+
+        if (dream.symbols && dream.symbols.length > 0) {
+            let symbolsText = '🔮 Symbols found in dream:\n';
+            dream.symbols.forEach(sym => {
+                symbolsText += `🜂 ${capitalize(sym.symbol)} → ${sym.interpretation}\n`;
+            });
+            symbolsText += `\n✅ Total symbols matched: ${dream.symbols.length}`;
+            symbolsDiv.innerText = symbolsText;
+        } else {
+            symbolsDiv.innerText = 'No dream symbols detected.';
+        }
+
+        div.appendChild(symbolsDiv);
+
+        // Delete button
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'delete';
+        deleteBtn.innerText = 'Delete';
+        deleteBtn.addEventListener('click', () => deleteDream(dream.id));
+        div.appendChild(deleteBtn);
+
+        container.appendChild(div);
+    });
+}
+
+// Capitalize first letter
+function capitalize(str) {
+    return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+async function addDream(title, content, mood) {
+    const res = await fetch('/add_dream', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({title, content, mood})
+    });
+    return res.ok;
+}
+
+async function deleteDream(id) {
+    await fetch(`/delete_dream/${id}`, {method: 'DELETE'});
+    fetchDreams();
+}
+
+// Handle form submission
+const form = document.getElementById('dreamForm');
+form.addEventListener('submit', async e => {
+    e.preventDefault();
+    const title = document.getElementById('title').value;
+    const content = document.getElementById('content').value;
+    const mood = document.getElementById('mood').value;
+
+    const success = await addDream(title, content, mood);
+    const messageEl = document.getElementById('message');
+
+    if (success) {
+        form.reset();
+        messageEl.innerText = 'Dream saved!';
+        setTimeout(() => { messageEl.innerText = ''; }, 3000);
+        fetchDreams();
+    } else {
+        messageEl.innerText = 'Error saving dream';
+    }
+});
+
+// Load dreams initially
+fetchDreams();
+</script>
+</body>
+</html>
