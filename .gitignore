@@ -1,18 +1,44 @@
-ai_dream_journal/*
-ai_dream_journal/**
-dream_frontend/*
-dream_frontend/node_modules/*
-dream_frontend/node_modules/**
-venv/
-venv/*
+﻿# =========================
+# Python
+# =========================
 __pycache__/
-__pycache__/*
 *.pyc
+*.pyo
+*.pyd
+.env
+venv/
+
+# =========================
+# Databases
+# =========================
 *.db
 *.sqlite
-models/
-models/*
-.huggingface/
-.huggingface/*
-.idea/
+*.sqlite3
+
+# =========================
+# Datasets (large / external)
+# =========================
+datasets/*.csv
+
+# =========================
+# Trained models & artifacts
+# =========================
+models/*.pkl
+models/symbol_index/
+utils/artifacts/
+*.joblib
+
+# =========================
+# Temporary / editor junk
+# =========================
+tempCodeRunnerFile.py
 .vscode/
+.DS_Store
+Thumbs.db
+
+# =========================
+# Node / frontend (if added later)
+# =========================
+node_modules/
+build/
+dist/
